@@ -6,12 +6,15 @@ set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 add_executable(${PROJECT_NAME})
 
-
 add_subdirectory(src)
 
-
+set(OPTIMIZATION_OPTIONS
+$<$<CONFIG:RELEASE>:-Os -flto -fomit-frame-pointer>
+$<$<CONFIG:DEBUG>:-O0 -g3 -ggdb>
+)
 set(PROJECT_COMMON_C_CPP_FLAGS
     ${CPU_OPTIONS} -Wall -Wextra -Werror=shadow -Werror=switch -Werror=return-type -Wimplicit-fallthrough=5 -ffunction-sections -fdata-sections
+    ${OPTIMIZATION_OPTIONS}
 )
 
 set(PROJECT_C_FLAGS
