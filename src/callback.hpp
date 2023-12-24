@@ -14,8 +14,9 @@ namespace helpers
     };
 } // namespace helpers
 
-template <typename Signature> class Callback;
-template <typename Ret, typename... Args> class Callback<Ret(Args...)>
+template <std::size_t StorageSize, typename ErrorPolicy, typename Signature> class Callback;
+template <std::size_t StorageSize, typename ErrorPolicy, typename Ret, typename... Args>
+class Callback<StorageSize, ErrorPolicy, Ret(Args...)>
 {
   public:
     using FuncType = Ret (*)(void*, Args...);
@@ -72,17 +73,17 @@ template <typename Ret, typename... Args> class Callback<Ret(Args...)>
     }
 
     template <typename T, Ret (T::*ptrToMemFun)(Args... args)>
-    static constexpr Callback<Ret(Args...)> Create(T& instance)
+    static constexpr Callback<StorageSize, ErrorPolicy, Ret(Args...)> Create(T& instance)
     {
-        Callback<Ret(Args...)> d;
+        Callback<StorageSize, ErrorPolicy, Ret(Args...)> d;
         d.Bind<T, ptrToMemFun>(instance);
         return d;
     }
 
     template <typename T, Ret (T::*ptrToMemFun)(Args... args) const>
-    static constexpr Callback<Ret(Args...)> Create(T& instance)
+    static constexpr Callback<StorageSize, ErrorPolicy, Ret(Args...)> Create(T& instance)
     {
-        Callback<Ret(Args...)> d;
+        Callback<StorageSize, ErrorPolicy, Ret(Args...)> d;
         d.Bind<T, ptrToMemFun>(instance);
         return d;
     }
@@ -117,7 +118,10 @@ template <typename Ret, typename... Args> class Callback<Ret(Args...)>
     {
         if (funcPtr_) {
             (*funcPtr_)(objPtr_, std::forward<Args>(args)...);
+            return;
         }
+
+        ErrorPolicy::OnBadCall();
     }
 
     Ret operator()(Args... args) const
@@ -126,6 +130,7 @@ template <typename Ret, typename... Args> class Callback<Ret(Args...)>
         if (funcPtr_) {
             return (*funcPtr_)(objPtr_, std::forward<Args>(args)...);
         }
+        ErrorPolicy::OnBadCall();
         return Ret{};
     }
 
@@ -145,7 +150,7 @@ template <typename Ret, typename... Args> class Callback<Ret(Args...)>
     }
 
   private:
-    alignas(alignof(std::max_align_t)) std::array<uint8_t, 32> closureStorage_{};
+    alignas(alignof(std::max_align_t)) std::array<uint8_t, StorageSize> closureStorage_{};
     void* objPtr_{nullptr};
     FuncType funcPtr_{nullptr};
     bool storingClosure_{false};

@@ -1,6 +1,17 @@
 #include "callback.hpp"
 #include <iostream>
 
+class ErrorPolicyIostream
+{
+  public:
+    static void OnBadCall()
+    {
+        std::cout << "BAD CALL" << std::endl;
+    }
+};
+
+template <typename Signature> using MyCallback = Callback<32, ErrorPolicyIostream, Signature>;
+
 int main(int, char*[])
 {
     int foobar  = 0;
@@ -9,8 +20,10 @@ int main(int, char*[])
         ++foobar;
     };
 
-    Callback<void()> cb;
-    Callback<void()> cb2;
+    MyCallback<void()> cb;
+    MyCallback<void()> cb2;
+
+    cb();
 
     cb  = lambda;
     cb2 = cb;
