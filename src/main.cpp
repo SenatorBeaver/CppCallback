@@ -16,26 +16,35 @@ template <typename Signature> using MyCallback = Callback<32, ErrorPolicyIostrea
 
 int main(int, char*[])
 {
-    int foobar      = 0;
-    auto lambda     = [&]() { ++foobar; };
-    using Signature = void();
+    int foobar          = 0;
+    auto lambdaVoid     = [&]() { ++foobar; };
+    auto lambdaInt      = [&]() { return ++foobar; };
+    using SignatureVoid = void();
+    using SignatureInt  = int();
 
-    MyCallback<Signature> cb;
-    MyCallback<Signature> cb2;
-    std::function<Signature> f;
+    MyCallback<SignatureVoid> cbVoid;
+    MyCallback<SignatureVoid> cb2Void;
+    std::function<SignatureVoid> fVoid;
 
-    cb();
+    MyCallback<SignatureInt> cbInt;
+    MyCallback<SignatureInt> cb2Int;
+    std::function<SignatureInt> fInt;
 
-    cb  = lambda;
-    cb2 = cb;
-    f   = lambda;
+    cbVoid();
+
+    cbVoid  = lambdaVoid;
+    cb2Void = cbVoid;
+    fVoid   = lambdaVoid;
+    cbInt   = lambdaInt;
+    cb2Int  = cbInt;
+    fInt    = lambdaInt;
 
     { // Start measuring time
         auto start_time = std::chrono::high_resolution_clock::now();
 
         // Your code to be measured goes here
         for (int i = 0; i < 100'000'000; ++i) {
-            cb();
+            cbVoid();
         }
 
         // Stop measuring time
@@ -52,7 +61,7 @@ int main(int, char*[])
 
         // Your code to be measured goes here
         for (int i = 0; i < 100'000'000; ++i) {
-            f();
+            fVoid();
         }
 
         // Stop measuring time

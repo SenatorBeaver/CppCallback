@@ -113,25 +113,19 @@ class Callback<StorageSize, ErrorPolicy, Ret(Args...)>
         storingClosure_ = false;
     }
 
-    void operator()(Args... args) const
+    Ret operator()(Args... args) const
         requires(std::is_same_v<Ret, void>)
     {
         if (funcPtr_) {
-            (*funcPtr_)(objPtr_, std::forward<Args>(args)...);
-            return;
+            if constexpr (std::is_same_v<Ret, void>) {
+                (*funcPtr_)(objPtr_, std::forward<Args>(args)...);
+            }
+            else {
+                return (*funcPtr_)(objPtr_, std::forward<Args>(args)...);
+            }
         }
 
         ErrorPolicy::OnBadCall();
-    }
-
-    Ret operator()(Args... args) const
-        requires(!std::is_same_v<Ret, void>)
-    {
-        if (funcPtr_) {
-            return (*funcPtr_)(objPtr_, std::forward<Args>(args)...);
-        }
-        ErrorPolicy::OnBadCall();
-        return Ret{};
     }
 
     bool IsEmpty() const
